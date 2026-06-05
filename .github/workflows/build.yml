@@ -22,10 +22,10 @@ jobs:
 
       - name: Verify ZIP file
         run: |
-          if [ ! -f "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_CLASS_REPORT_PRINT_FIXED.zip" ]; then
+          if [ ! -f "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_CLASS_REPORT_PRINT_FIXED (1).zip" ]; then
             echo "ERROR: ZIP file not found."
             echo "Required file:"
-            echo "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_CLASS_REPORT_PRINT_FIXED.zip"
+            echo "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_CLASS_REPORT_PRINT_FIXED (1).zip"
             echo ""
             echo "Current files:"
             ls -lah
@@ -36,18 +36,16 @@ jobs:
         run: |
           rm -rf project
           mkdir project
-          unzip -q "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_CLASS_REPORT_PRINT_FIXED.zip" -d project
+          unzip -q "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_CLASS_REPORT_PRINT_FIXED (1).zip" -d project
 
       - name: Find Android project
         id: project
         run: |
           PROJECT_DIR="$(find project -name settings.gradle | head -n 1 | xargs dirname)"
-
           if [ -z "$PROJECT_DIR" ]; then
             echo "ERROR: Android project not found. settings.gradle missing."
             exit 1
           fi
-
           echo "project_dir=$PROJECT_DIR" >> "$GITHUB_OUTPUT"
           echo "Project found at: $PROJECT_DIR"
 
@@ -56,17 +54,13 @@ jobs:
           MAIN="${{ steps.project.outputs.project_dir }}/app/src/main/java/com/walhero/siramowathaba/MainActivity.java"
           HTML="${{ steps.project.outputs.project_dir }}/app/src/main/assets/index.html"
 
-          echo "Checking MainActivity.java..."
           grep -n "printCurrentStudentRecordNative" "$MAIN"
           grep -n "openAndroidPrintDialog" "$MAIN"
           grep -n "backParams.setMargins(dp(8), dp(48)" "$MAIN"
           grep -n "printParams.setMargins(dp(8), dp(48)" "$MAIN"
 
-          echo "Checking group print fix..."
           grep -n "AndroidBridge.printHtml(html)" "$HTML"
           grep -n "function executeMultiPrint" "$HTML"
-
-          echo "Checking class report print fix..."
           grep -n "printClassSummaryReport" "$HTML"
           grep -n "getClassSummaryPrintableHTML" "$HTML"
           grep -n "طباعة التقرير" "$HTML"

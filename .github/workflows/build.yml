@@ -1,4 +1,4 @@
-name: Build APK from final multi records A4 ZIP
+name: Build APK from uploaded ZIP
 
 on:
   workflow_dispatch:
@@ -22,10 +22,10 @@ jobs:
 
       - name: Verify ZIP file
         run: |
-          if [ ! -f "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_A4_FIXED.zip" ]; then
+          if [ ! -f "sira-mowathaba-final-a4-portrait-apk.zip" ]; then
             echo "ERROR: ZIP file not found."
             echo "Required file:"
-            echo "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_A4_FIXED.zip"
+            echo "sira-mowathaba-final-a4-portrait-apk.zip"
             echo ""
             echo "Current files:"
             ls -lah
@@ -36,7 +36,7 @@ jobs:
         run: |
           rm -rf project
           mkdir project
-          unzip -q "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_A4_FIXED.zip" -d project
+          unzip -q "sira-mowathaba-final-a4-portrait-apk.zip" -d project
 
       - name: Find Android project
         id: project
@@ -62,9 +62,8 @@ jobs:
           grep -n "backParams.setMargins(dp(8), dp(48)" "$MAIN"
           grep -n "printParams.setMargins(dp(8), dp(48)" "$MAIN"
 
-          echo "Checking multi records print fix..."
+          echo "Checking print fixes..."
           grep -n "function executeMultiPrint" "$HTML"
-          grep -n "MULTI_RECORDS_A4_FIXED" "$HTML" || true
           grep -n "AndroidBridge.printHtml(html)" "$HTML"
 
       - name: Setup Java 17
@@ -86,11 +85,11 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p final-apk
-          cp "${{ steps.project.outputs.project_dir }}"/app/build/outputs/apk/debug/*.apk "final-apk/sira-mowathaba-final-multi-records-a4.apk"
+          cp "${{ steps.project.outputs.project_dir }}"/app/build/outputs/apk/debug/*.apk "final-apk/sira-mowathaba-final.apk"
           ls -lah final-apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: sira-mowathaba-final-multi-records-a4-apk
+          name: sira-mowathaba-final-apk
           path: final-apk/*.apk

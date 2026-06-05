@@ -1,4 +1,4 @@
-name: Build APK from selected ZIP
+name: Build APK from records per page ZIP
 
 on:
   workflow_dispatch:
@@ -17,17 +17,14 @@ jobs:
 
       - name: Show files
         run: |
-          echo "Files in repository:"
           ls -lah
 
       - name: Verify ZIP file
         run: |
-          if [ ! -f "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_A4_FIXED.zip" ]; then
+          if [ ! -f "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_A4_FIXED_RECORDS_PER_PAGE_ONLY.zip" ]; then
             echo "ERROR: ZIP file not found."
             echo "Required file:"
-            echo "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_A4_FIXED.zip"
-            echo ""
-            echo "Current files:"
+            echo "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_A4_FIXED_RECORDS_PER_PAGE_ONLY.zip"
             ls -lah
             exit 1
           fi
@@ -36,7 +33,7 @@ jobs:
         run: |
           rm -rf project
           mkdir project
-          unzip -q "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_A4_FIXED.zip" -d project
+          unzip -q "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_A4_FIXED_RECORDS_PER_PAGE_ONLY.zip" -d project
 
       - name: Find Android project
         id: project
@@ -45,7 +42,6 @@ jobs:
 
           if [ -z "$PROJECT_DIR" ]; then
             echo "ERROR: Android project not found. settings.gradle missing."
-            echo "Extracted files:"
             find project -maxdepth 5 -type f | head -n 100
             exit 1
           fi
@@ -58,13 +54,8 @@ jobs:
           MAIN="${{ steps.project.outputs.project_dir }}/app/src/main/java/com/walhero/siramowathaba/MainActivity.java"
           HTML="${{ steps.project.outputs.project_dir }}/app/src/main/assets/index.html"
 
-          echo "Checking MainActivity.java..."
           grep -n "printCurrentStudentRecordNative" "$MAIN"
           grep -n "openAndroidPrintDialog" "$MAIN"
-          grep -n "backParams.setMargins(dp(8), dp(48)" "$MAIN"
-          grep -n "printParams.setMargins(dp(8), dp(48)" "$MAIN"
-
-          echo "Checking grouped print..."
           grep -n "function executeMultiPrint" "$HTML"
           grep -n "AndroidBridge.printHtml(html)" "$HTML"
 
@@ -87,11 +78,11 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p final-apk
-          cp "${{ steps.project.outputs.project_dir }}"/app/build/outputs/apk/debug/*.apk "final-apk/sira-mowathaba-test.apk"
+          cp "${{ steps.project.outputs.project_dir }}"/app/build/outputs/apk/debug/*.apk "final-apk/sira-mowathaba-records-per-page.apk"
           ls -lah final-apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: sira-mowathaba-test-apk
+          name: sira-mowathaba-records-per-page-apk
           path: final-apk/*.apk

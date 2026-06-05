@@ -22,10 +22,10 @@ jobs:
 
       - name: Verify ZIP file
         run: |
-          if [ ! -f "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY (1).zip" ]; then
+          if [ ! -f "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY(1).zip" ]; then
             echo "ERROR: ZIP file not found."
             echo "Required file:"
-            echo "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY (1).zip"
+            echo "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY(1).zip"
             echo ""
             echo "Current files:"
             ls -lah
@@ -36,7 +36,7 @@ jobs:
         run: |
           rm -rf project
           mkdir project
-          unzip -q "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY (1).zip" -d project
+          unzip -q "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY(1).zip" -d project
 
       - name: Find Android project
         id: project

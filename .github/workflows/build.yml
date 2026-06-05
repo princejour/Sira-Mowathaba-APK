@@ -1,4 +1,4 @@
-name: Build APK from final 6 records A4 ZIP
+name: Build APK from selected ZIP
 
 on:
   workflow_dispatch:
@@ -22,10 +22,10 @@ jobs:
 
       - name: Verify ZIP file
         run: |
-          if [ ! -f "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_6_IN_ONE_A4_FIXED.zip" ]; then
+          if [ ! -f "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_A4_FIXED.zip" ]; then
             echo "ERROR: ZIP file not found."
             echo "Required file:"
-            echo "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_6_IN_ONE_A4_FIXED.zip"
+            echo "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_A4_FIXED.zip"
             echo ""
             echo "Current files:"
             ls -lah
@@ -36,7 +36,7 @@ jobs:
         run: |
           rm -rf project
           mkdir project
-          unzip -q "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_6_IN_ONE_A4_FIXED.zip" -d project
+          unzip -q "PRINT_BUTTON_REAL_ATTEMPT_COMPILE_FIXED_BUTTONS_DOWN_ONLY_MULTI_RECORDS_A4_FIXED.zip" -d project
 
       - name: Find Android project
         id: project
@@ -53,7 +53,7 @@ jobs:
           echo "project_dir=$PROJECT_DIR" >> "$GITHUB_OUTPUT"
           echo "Project found at: $PROJECT_DIR"
 
-      - name: Verify final corrections
+      - name: Verify corrections
         run: |
           MAIN="${{ steps.project.outputs.project_dir }}/app/src/main/java/com/walhero/siramowathaba/MainActivity.java"
           HTML="${{ steps.project.outputs.project_dir }}/app/src/main/assets/index.html"
@@ -64,10 +64,8 @@ jobs:
           grep -n "backParams.setMargins(dp(8), dp(48)" "$MAIN"
           grep -n "printParams.setMargins(dp(8), dp(48)" "$MAIN"
 
-          echo "Checking 6 records A4 grouped print fix..."
+          echo "Checking grouped print..."
           grep -n "function executeMultiPrint" "$HTML"
-          grep -n "height:45.4mm" "$HTML"
-          grep -n "mini-print-table" "$HTML"
           grep -n "AndroidBridge.printHtml(html)" "$HTML"
 
       - name: Setup Java 17
@@ -89,11 +87,11 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p final-apk
-          cp "${{ steps.project.outputs.project_dir }}"/app/build/outputs/apk/debug/*.apk "final-apk/sira-mowathaba-6-records-a4.apk"
+          cp "${{ steps.project.outputs.project_dir }}"/app/build/outputs/apk/debug/*.apk "final-apk/sira-mowathaba-test.apk"
           ls -lah final-apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: sira-mowathaba-6-records-a4-apk
+          name: sira-mowathaba-test-apk
           path: final-apk/*.apk

@@ -1,0 +1,105 @@
+name: Build APK Debug From ZIP
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show repository files
+        run: |
+          echo "ROOT FILES:"
+          ls -lah
+          echo "ZIP FILES:"
+          find . -maxdepth 1 -type f -iname "*.zip" -print -exec ls -lh {} \; -exec sha256sum {} \;
+
+      - name: Pick the only ZIP
+        id: zip
+        run: |
+          ZIP_COUNT=$(find . -maxdepth 1 -type f -iname "*.zip" | wc -l)
+          if [ "$ZIP_COUNT" -ne 1 ]; then
+            echo "ERROR: لازم يكون في المستودع ملف ZIP واحد فقط. الموجود: $ZIP_COUNT"
+            find . -maxdepth 1 -type f -iname "*.zip" -print
+            exit 1
+          fi
+
+          ZIP_FILE=$(find . -maxdepth 1 -type f -iname "*.zip" | head -n 1)
+          echo "zip_file=$ZIP_FILE" >> "$GITHUB_OUTPUT"
+          echo "Using ZIP: $ZIP_FILE"
+          sha256sum "$ZIP_FILE"
+
+      - name: Unzip fresh
+        run: |
+          rm -rf project
+          mkdir project
+          unzip -q "${{ steps.zip.outputs.zip_file }}" -d project
+          echo "Extracted tree:"
+          find project -maxdepth 4 -type f | sed 's#^# - #' | head -n 120
+
+      - name: Find Android project
+        id: project
+        run: |
+          PROJECT_DIR=$(find project -name settings.gradle | head -n 1 | xargs dirname)
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "ERROR: settings.gradle غير موجود داخل ZIP"
+            exit 1
+          fi
+
+          echo "project_dir=$PROJECT_DIR" >> "$GITHUB_OUTPUT"
+          echo "PROJECT_DIR=$PROJECT_DIR"
+
+      - name: Verify this is the new print attempt
+        run: |
+          MAIN="${{ steps.project.outputs.project_dir }}/app/src/main/java/com/walhero/siramowathaba/MainActivity.java"
+          HTML="${{ steps.project.outputs.project_dir }}/app/src/main/assets/index.html"
+
+          echo "MainActivity checksum:"
+          sha256sum "$MAIN"
+
+          echo "index.html checksum:"
+          sha256sum "$HTML"
+
+          echo "Checking for native print button code..."
+          grep -n "printCurrentStudentRecordNative" "$MAIN" || true
+          grep -n "nativePrintButton" "$MAIN" || true
+          grep -n "AndroidBridge" "$MAIN" || true
+
+          if ! grep -q "printCurrentStudentRecordNative" "$MAIN"; then
+            echo "ERROR: هذا ZIP لا يحتوي كود زر الطباعة الجديد. GitHub يبني نسخة قديمة أو الملف غلط."
+            exit 1
+          fi
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.10.2
+
+      - name: Clean and build APK
+        run: |
+          cd "${{ steps.project.outputs.project_dir }}"
+          gradle clean assembleDebug --no-build-cache
+
+      - name: Rename APK with run number
+        run: |
+          mkdir -p final-apk
+          cp "${{ steps.project.outputs.project_dir }}"/app/build/outputs/apk/debug/*.apk "final-apk/sira-mowathaba-run-${{ github.run_number }}.apk"
+          ls -lah final-apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sira-mowathaba-run-${{ github.run_number }}
+          path: final-apk/*.apk
